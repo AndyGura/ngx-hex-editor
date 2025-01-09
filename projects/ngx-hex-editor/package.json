@@ -1,6 +1,20 @@
 {
   "name": "ngx-hex-editor",
-  "version": "0.0.1",
+  "version": "0.0.3",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AndyGura/ngx-hex-editor.git"
+  },
+  "keywords": [
+    "hex-editor",
+    "angular"
+  ],
+  "author": "AndyGura",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/AndyGura/ngx-hex-editor/issues"
+  },
+  "homepage": "https://github.com/AndyGura/ngx-hex-editor#readme",
   "peerDependencies": {
     "@angular/common": "^15.1.0",
     "@angular/core": "^15.1.0"
