@@ -94,9 +94,27 @@ export class AppComponent {
 | `showOffsets` | `boolean`    | `true`             | Show global offset for each line (left panel).            |
 | `showUtf8`    | `boolean`    | `true`             | Show UTF8 representation for each byte (right panel).     |
 
-| Output       | Type                       | Description                                                                                                                         |
-| ------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Output       | Type                       | Description                                                                                                                                                                                  |
+| ------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `dataChange` | `EventEmitter<Uint8Array>` | Emits updated data when changes occur. Note: if changes occur in already existing bytes, data is edited in place. If new bytes are appended, then a new `Uint8Array` is created and emitted. |
+
+---
+
+## Development
+
+To run the development subproject for testing and exploring the library:
+
+1. Clone the repository and install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
+   The development application will be available at `http://localhost:4200/`. It provides a textarea for Base16 encoded data synced with the hex editor component.
 
 ---
 

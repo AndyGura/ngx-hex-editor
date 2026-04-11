@@ -42,6 +42,7 @@ import {
             [id]="'hex_input__' + rowIndex + '__' + colIndex"
             [value]="value.hex"
             (input)="onHexInput($event, rowIndex, colIndex)"
+            (keydown)="onKeyDown($event, rowIndex, colIndex)"
             (focus)="onHexFocus($event, colIndex)"
             (blur)="onHexBlur($event)"
             [disabled]="readOnly"
@@ -206,13 +207,6 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
 
   @Input() set data(value: Uint8Array) {
     if (value === this._data$.value) {
-      return;
-    } else if (value.length === this._data$.value.length) {
-      for (let i = 0; i < value.length; i++) {
-        if (value[i] !== this._data$.value[i]) {
-          break;
-        }
-      }
       return;
     }
     this._data$.next(value);
@@ -464,6 +458,78 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
 
         this.dataChange.emit(this.data);
         setTimeout(() => this.goToNextInput(inputElement.id), 0);
+      }
+    }
+  }
+
+  onKeyDown(event: KeyboardEvent, rowIndex: number, colIndex: number): void {
+    if (this.readOnly) {
+      return;
+    }
+
+    if (event.key === "Delete") {
+      const dataIndex =
+        (this.currentPage$.value * this.pageSize$.value[1] + rowIndex) *
+          this.pageSize$.value[0] +
+        colIndex;
+
+      if (dataIndex < this.data.length) {
+        const newData = new Uint8Array(this.data.length - 1);
+        newData.set(this.data.subarray(0, dataIndex));
+        newData.set(this.data.subarray(dataIndex + 1), dataIndex);
+        this._data$.next(newData);
+        this.dataChange.emit(this.data);
+        event.preventDefault();
+      }
+    } else if (event.key === "Insert") {
+      const dataIndex =
+        (this.currentPage$.value * this.pageSize$.value[1] + rowIndex) *
+          this.pageSize$.value[0] +
+        colIndex;
+
+      if (dataIndex <= this.data.length) {
+        const newData = new Uint8Array(this.data.length + 1);
+        newData.set(this.data.subarray(0, dataIndex));
+        newData[dataIndex] = 0;
+        newData.set(this.data.subarray(dataIndex), dataIndex + 1);
+        this._data$.next(newData);
+        this.dataChange.emit(this.data);
+        event.preventDefault();
+      }
+    } else if (event.key === "Backspace") {
+      const inputElement = event.target as HTMLInputElement;
+      if (
+        inputElement.selectionStart !== inputElement.selectionEnd ||
+        inputElement.selectionStart === 0
+      ) {
+        const dataIndex =
+          (this.currentPage$.value * this.pageSize$.value[1] + rowIndex) *
+            this.pageSize$.value[0] +
+          colIndex;
+
+        if (dataIndex > 0 && dataIndex <= this.data.length) {
+          const newData = new Uint8Array(this.data.length - 1);
+          newData.set(this.data.subarray(0, dataIndex - 1));
+          newData.set(this.data.subarray(dataIndex), dataIndex - 1);
+          this._data$.next(newData);
+          this.dataChange.emit(this.data);
+
+          // Move focus back
+          setTimeout(() => {
+            if (colIndex > 0) {
+              this.blurInput(rowIndex, colIndex - 1);
+            } else if (rowIndex > 0) {
+              this.blurInput(rowIndex - 1, this.pageSize$.value[0] - 1);
+            } else if (this.currentPage$.value > 0) {
+              this.changePage(-1);
+              this.blurInput(
+                this.pageSize$.value[1] - 1,
+                this.pageSize$.value[0] - 1,
+              );
+            }
+          }, 0);
+          event.preventDefault();
+        }
       }
     }
   }
