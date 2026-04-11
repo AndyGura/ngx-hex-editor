@@ -58,7 +58,7 @@ export class AppModule {}
 2. Use the component in your template:
 
 ```html
-<hex-editor [data]="data" (dataChange)="handleDataChange()"> </hex-editor>
+<hex-editor [data]="data" (dataChange)="handleDataChange($event)"> </hex-editor>
 ```
 
 3. Bind data and handle events in your component:
@@ -74,7 +74,8 @@ import { Component } from "@angular/core";
 export class AppComponent {
   data = new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f]);
 
-  handleDataChange() {
+  handleDataChange(newData: Uint8Array) {
+    this.data = newData;
     console.log("Data updated:", this.data);
   }
 }
@@ -95,7 +96,7 @@ export class AppComponent {
 
 | Output       | Type                       | Description                                                                                                                         |
 | ------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `dataChange` | `EventEmitter<Uint8Array>` | Emits updated data when changes occur. Note: editor edits data in place, so returned value has the same reference as provided data. |
+| `dataChange` | `EventEmitter<Uint8Array>` | Emits updated data when changes occur. Note: if changes occur in already existing bytes, data is edited in place. If new bytes are appended, then a new `Uint8Array` is created and emitted. |
 
 ---
 
