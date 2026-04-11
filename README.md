@@ -25,15 +25,15 @@ binary data efficiently, with features such as editable hex values and UTF8 visu
 
 Install the package using npm or yarn:
 
-```bash  
-npm install ngx-hex-editor  
-```  
+```bash
+npm install ngx-hex-editor
+```
 
 or
 
-```bash  
-yarn add ngx-hex-editor  
-```  
+```bash
+yarn add ngx-hex-editor
+```
 
 ---
 
@@ -41,71 +41,60 @@ yarn add ngx-hex-editor
 
 1. Import the module in your Angular application:
 
-```typescript  
-// app.module.ts  
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { HexEditorModule } from 'ngx-hex-editor';
+```typescript
+// app.module.ts
+import { NgModule } from "@angular/core";
+import { BrowserModule } from "@angular/platform-browser";
+import { HexEditorModule } from "ngx-hex-editor";
 
 @NgModule({
-  declarations: [
-    AppComponent
-  ],
-  imports: [
-    BrowserModule,
-    HexEditorModule
-  ],
-  bootstrap: [AppComponent]
+  declarations: [AppComponent],
+  imports: [BrowserModule, HexEditorModule],
+  bootstrap: [AppComponent],
 })
-export class AppModule {
-}  
-```  
+export class AppModule {}
+```
 
 2. Use the component in your template:
 
-```html  
-
-<hex-editor
-  [data]="data"
-  (dataChange)="handleDataChange()">
-</hex-editor>  
-```  
+```html
+<hex-editor [data]="data" (dataChange)="handleDataChange()"> </hex-editor>
+```
 
 3. Bind data and handle events in your component:
 
-```typescript  
-import { Component } from '@angular/core';
+```typescript
+import { Component } from "@angular/core";
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  selector: "app-root",
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.css"],
 })
 export class AppComponent {
-  data = new Uint8Array([0x48, 0x65, 0x6C, 0x6C, 0x6F]);
+  data = new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f]);
 
   handleDataChange() {
-    console.log('Data updated:', this.data);
+    console.log("Data updated:", this.data);
   }
-
-}  
-```  
+}
+```
 
 ---
 
 ## Options
 
-| Input         | Type         | Default            | Description                                               |  
-|---------------|--------------|--------------------|-----------------------------------------------------------|  
-| `data`        | `Uint8Array` | `new Uint8Array()` | Binary data to display/edit.                              |  
-| `readOnly`    | `boolean`    | `false`            | If `true`, editing is disabled.                           |  
-| `maxRows`     | `number`     | `0`                | Max amount of rows in the viewport. 0 means unlimited.    |  
-| `maxColumns`  | `number`     | `0`                | Max amount of columns in the viewport. 0 means unlimited. |  
-| `showOffsets` | `boolean`    | `true`             | Show global offset for each line (left panel).            |  
-| `showUtf8`    | `boolean`    | `true`             | Show UTF8 representation for each byte (right panel).     |  
+| Input         | Type         | Default            | Description                                               |
+| ------------- | ------------ | ------------------ | --------------------------------------------------------- |
+| `data`        | `Uint8Array` | `new Uint8Array()` | Binary data to display/edit.                              |
+| `readOnly`    | `boolean`    | `false`            | If `true`, editing is disabled.                           |
+| `maxRows`     | `number`     | `0`                | Max amount of rows in the viewport. 0 means unlimited.    |
+| `maxColumns`  | `number`     | `0`                | Max amount of columns in the viewport. 0 means unlimited. |
+| `showOffsets` | `boolean`    | `true`             | Show global offset for each line (left panel).            |
+| `showUtf8`    | `boolean`    | `true`             | Show UTF8 representation for each byte (right panel).     |
 
-| Output       | Type                       | Description                                                                                                                         |  
-|--------------|----------------------------|-------------------------------------------------------------------------------------------------------------------------------------|  
+| Output       | Type                       | Description                                                                                                                         |
+| ------------ | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `dataChange` | `EventEmitter<Uint8Array>` | Emits updated data when changes occur. Note: editor edits data in place, so returned value has the same reference as provided data. |
 
 ---
@@ -117,6 +106,6 @@ on [GitHub](https://github.com/AndyGura/ngx-hex-editor).
 
 ---
 
-
 ## License
+
 [Apache License](LICENSE)

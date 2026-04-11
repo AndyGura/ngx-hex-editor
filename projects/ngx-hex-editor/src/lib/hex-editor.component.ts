@@ -9,43 +9,83 @@ import {
   OnDestroy,
   Output,
   ViewChild,
-} from '@angular/core';
-import { auditTime, BehaviorSubject, combineLatest, Subject, takeUntil } from 'rxjs';
+} from "@angular/core";
+import {
+  auditTime,
+  BehaviorSubject,
+  combineLatest,
+  Subject,
+  takeUntil,
+} from "rxjs";
 
 @Component({
-  selector: 'hex-editor',
+  selector: "hex-editor",
   template: `
     <div class="editor-body" #editorBody>
-      <div class="row"
-           *ngFor="let row of (renderedRows$ | async); let rowIndex = index; trackBy: trackByIndex"
-           [class.gray]="rowIndex % 2 !== 0">
+      <div
+        class="row"
+        *ngFor="
+          let row of renderedRows$ | async;
+          let rowIndex = index;
+          trackBy: trackByIndex
+        "
+        [class.gray]="rowIndex % 2 !== 0"
+      >
         <div *ngIf="_showOffsets$ | async" class="offset">{{ row.offset }}</div>
         <div class="hex-values">
           <input
-            *ngFor="let value of row.values; let colIndex = index; trackBy: trackByIndex"
+            *ngFor="
+              let value of row.values;
+              let colIndex = index;
+              trackBy: trackByIndex
+            "
             [id]="'hex_input__' + rowIndex + '__' + colIndex"
-            [value]="value[0]"
+            [value]="value.hex"
             (input)="onHexInput($event, rowIndex, colIndex)"
             (focus)="onHexFocus($event, colIndex)"
             (blur)="onHexBlur($event)"
-            [disabled]="value[0] === null"
+            [disabled]="readOnly"
+            [class.empty]="value.isEmpty"
             maxlength="2"
           />
         </div>
-        <div *ngIf="(_showOffsets$ | async) || (_showUtf8$ | async)" class="flex-spacer"></div>
+        <div
+          *ngIf="(_showOffsets$ | async) || (_showUtf8$ | async)"
+          class="flex-spacer"
+        ></div>
         <div *ngIf="_showUtf8$ | async" class="utf8-values">
-          <span *ngFor="let value of row.values; let colIndex = index; trackBy: trackByIndex"
-                [id]="'utf_char__' + rowIndex + '__' + colIndex"
-                (click)="blurInput(rowIndex, colIndex)">{{ value[1] }}</span>
+          <span
+            *ngFor="
+              let value of row.values;
+              let colIndex = index;
+              trackBy: trackByIndex
+            "
+            [id]="'utf_char__' + rowIndex + '__' + colIndex"
+            [class.empty]="value.isEmpty"
+            (click)="blurInput(rowIndex, colIndex)"
+            >{{ value.utf8 }}</span
+          >
         </div>
       </div>
       <div class="flex-spacer"></div>
     </div>
     <div *ngIf="((totalPages$ | async) || 0) > 1" class="pagination">
-      <button (click)="changePage(-1)" [disabled]="(currentPage$ | async) === 0">Previous</button>
-      <span>Page {{ ((currentPage$ | async) || 0) + 1 }} of {{ totalPages$ | async }}</span>
-      <button (click)="changePage(1)"
-              [disabled]="((currentPage$ | async) || 0) >= ((totalPages$ | async) || 0) - 1">
+      <button
+        (click)="changePage(-1)"
+        [disabled]="(currentPage$ | async) === 0"
+      >
+        Previous
+      </button>
+      <span
+        >Page {{ ((currentPage$ | async) || 0) + 1 }} of
+        {{ totalPages$ | async }}</span
+      >
+      <button
+        (click)="changePage(1)"
+        [disabled]="
+          ((currentPage$ | async) || 0) >= ((totalPages$ | async) || 0) - 1
+        "
+      >
         Next
       </button>
     </div>
@@ -96,6 +136,11 @@ import { auditTime, BehaviorSubject, combineLatest, Subject, takeUntil } from 'r
         box-sizing: border-box;
       }
 
+      .hex-values input.empty {
+        border: 1px dashed gray;
+        background-color: #f9f9f9;
+      }
+
       .utf8-values {
         margin-left: 8px;
       }
@@ -105,6 +150,11 @@ import { auditTime, BehaviorSubject, combineLatest, Subject, takeUntil } from 'r
         width: 8px;
         margin-left: 2px;
         color: black;
+      }
+
+      .utf8-values span.empty {
+        color: gray;
+        font-style: italic;
       }
 
       .utf8-values span.highlight {
@@ -126,32 +176,33 @@ import { auditTime, BehaviorSubject, combineLatest, Subject, takeUntil } from 'r
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HexEditorComponent implements AfterViewInit, OnDestroy {
-
   _maxColumns$: BehaviorSubject<number> = new BehaviorSubject<number>(0);
 
   @Input() set maxColumns(value: number) {
     this._maxColumns$.next(value);
-  };
+  }
 
   _maxRows$: BehaviorSubject<number> = new BehaviorSubject<number>(0);
 
   @Input() set maxRows(value: number) {
     this._maxRows$.next(value);
-  };
+  }
 
   _showOffsets$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
 
   @Input() set showOffsets(value: boolean) {
     this._showOffsets$.next(value);
-  };
+  }
 
   _showUtf8$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(true);
 
   @Input() set showUtf8(value: boolean) {
     this._showUtf8$.next(value);
-  };
+  }
 
-  _data$: BehaviorSubject<Uint8Array> = new BehaviorSubject<Uint8Array>(new Uint8Array());
+  _data$: BehaviorSubject<Uint8Array> = new BehaviorSubject<Uint8Array>(
+    new Uint8Array(),
+  );
 
   @Input() set data(value: Uint8Array) {
     if (value === this._data$.value) {
@@ -165,43 +216,64 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this._data$.next(value);
-  };
+  }
 
   get data(): Uint8Array {
     return this._data$.value;
   }
 
-  @Input() readOnly: boolean = false;
+  _readOnly$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
+
+  @Input() set readOnly(value: boolean) {
+    this._readOnly$.next(value);
+  }
+
+  get readOnly(): boolean {
+    return this._readOnly$.value;
+  }
 
   @Output() dataChange = new EventEmitter<Uint8Array>();
 
-  @ViewChild('editorBody') editorBody!: ElementRef<HTMLDivElement>;
+  @ViewChild("editorBody") editorBody!: ElementRef<HTMLDivElement>;
 
   currentPage$: BehaviorSubject<number> = new BehaviorSubject<number>(0);
   totalPages$: BehaviorSubject<number> = new BehaviorSubject<number>(1);
 
-  pageSize$: BehaviorSubject<[number, number]> = new BehaviorSubject<[number, number]>([0, 0]);
+  pageSize$: BehaviorSubject<[number, number]> = new BehaviorSubject<
+    [number, number]
+  >([0, 0]);
 
-  renderedRows$: BehaviorSubject<{ values: [string | null, string][]; offset: string }[]> = new BehaviorSubject<{
-    values: [string | null, string][];
-    offset: string
-  }[]>([]);
+  renderedRows$: BehaviorSubject<
+    {
+      values: { hex: string | null; utf8: string; isEmpty: boolean }[];
+      offset: string;
+    }[]
+  > = new BehaviorSubject<
+    {
+      values: { hex: string | null; utf8: string; isEmpty: boolean }[];
+      offset: string;
+    }[]
+  >([]);
 
   private viewportSize$ = new BehaviorSubject<[number, number]>([0, 0]);
 
   private readonly destroyed$: Subject<void> = new Subject<void>();
 
-  constructor(private readonly cdr: ChangeDetectorRef) {
-  }
+  constructor(private readonly cdr: ChangeDetectorRef) {}
 
-  private renderValue(byte: number | null): [string | null, string] {
+  private renderValue(byte: number | null): {
+    hex: string | null;
+    utf8: string;
+    isEmpty: boolean;
+  } {
     if (byte === null || byte === undefined) {
-      return [null, '∅'];
+      return { hex: null, utf8: "∅", isEmpty: true };
     } else {
-      return [
-        byte.toString(16).padStart(2, '0').toUpperCase(),
-        byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : '.'
-      ];
+      return {
+        hex: byte.toString(16).padStart(2, "0").toUpperCase(),
+        utf8: byte >= 32 && byte <= 126 ? String.fromCharCode(byte) : ".",
+        isEmpty: false,
+      };
     }
   }
 
@@ -224,52 +296,62 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
       this._showOffsets$,
       this._showUtf8$,
     ])
-      .pipe(
-        takeUntil(this.destroyed$),
-        auditTime(50)
-      )
-      .subscribe(([[pureWidth, height], maxColumns, maxRows, showOffsets, showUtf8]) => {
-        let width = pureWidth - 8 // - utf8 panel margin
-        if (showOffsets) {
-          width -= 68; // -60px width -8 px margin
-        }
-        let byteWidth = 32 + 2; // 32 own size, 2 gap
-        if (showUtf8) {
-          width -= 8; // utf8 margin
-          byteWidth += 10; //10 is for each UTF 8: 8 own size + 2 margin
-        }
-        const rowHeight = 24 + 4; // 24 own size, 4 margin bottom
-        let cols = Math.floor(width / byteWidth);
-        if (maxColumns > 0 && cols > maxColumns) {
-          cols = maxColumns;
-        }
-        let currentCols = this.pageSize$.value[0];
-        if ((cols === currentCols + 1) && ((width / byteWidth) % 1) < 0.5) {
-          cols = currentCols;
-        }
-        cols = Math.max(1, cols);
-        let rows = Math.floor(height / rowHeight);
-        if (maxRows > 0 && rows > maxRows) {
-          rows = maxRows;
-        }
-        rows = Math.max(1, rows);
-        if (cols != this.pageSize$.value[0] || rows !== this.pageSize$.value[1]) {
-          this.pageSize$.next([cols, rows]);
-        }
-      });
+      .pipe(takeUntil(this.destroyed$), auditTime(50))
+      .subscribe(
+        ([[pureWidth, height], maxColumns, maxRows, showOffsets, showUtf8]) => {
+          let width = pureWidth - 8; // - utf8 panel margin
+          if (showOffsets) {
+            width -= 68; // -60px width -8 px margin
+          }
+          let byteWidth = 32 + 2; // 32 own size, 2 gap
+          if (showUtf8) {
+            width -= 8; // utf8 margin
+            byteWidth += 10; //10 is for each UTF 8: 8 own size + 2 margin
+          }
+          const rowHeight = 24 + 4; // 24 own size, 4 margin bottom
+          let cols = Math.floor(width / byteWidth);
+          if (maxColumns > 0 && cols > maxColumns) {
+            cols = maxColumns;
+          }
+          let currentCols = this.pageSize$.value[0];
+          if (cols === currentCols + 1 && (width / byteWidth) % 1 < 0.5) {
+            cols = currentCols;
+          }
+          cols = Math.max(1, cols);
+          let rows = Math.floor(height / rowHeight);
+          if (maxRows > 0 && rows > maxRows) {
+            rows = maxRows;
+          }
+          rows = Math.max(1, rows);
+          if (
+            cols != this.pageSize$.value[0] ||
+            rows !== this.pageSize$.value[1]
+          ) {
+            this.pageSize$.next([cols, rows]);
+          }
+        },
+      );
 
     // render data
     combineLatest([
       this._data$,
       this.currentPage$,
-      this.pageSize$
+      this.pageSize$,
+      this._readOnly$,
     ])
       .pipe(takeUntil(this.destroyed$))
-      .subscribe(([data, currentPage, pageSize]) => {
+      .subscribe(([data, currentPage, pageSize, readOnly]) => {
         if (pageSize[0] === 0 || pageSize[1] === 0) {
           return;
         }
-        let totalPages = Math.max(1, Math.ceil(Math.ceil(data.length / pageSize[0]) / pageSize[1]));
+        let length = data.length;
+        if (!readOnly) {
+          length++;
+        }
+        let totalPages = Math.max(
+          1,
+          Math.ceil(Math.ceil(length / pageSize[0]) / pageSize[1]),
+        );
         if (this.totalPages$.value !== totalPages) {
           this.totalPages$.next(totalPages);
         }
@@ -278,19 +360,28 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
           this.currentPage$.next(currentPage);
           return;
         }
-        const pagedRows: { values: [string | null, string][]; offset: string }[] = [];
+        const pagedRows: {
+          values: { hex: string | null; utf8: string; isEmpty: boolean }[];
+          offset: string;
+        }[] = [];
         for (
           let i = currentPage * pageSize[0] * pageSize[1];
-          i < Math.min(data.length, (currentPage + 1) * pageSize[0] * pageSize[1]);
+          i < Math.min(length, (currentPage + 1) * pageSize[0] * pageSize[1]);
           i += pageSize[0]
         ) {
-          const values: [string | null, string][] = [];
+          const values: {
+            hex: string | null;
+            utf8: string;
+            isEmpty: boolean;
+          }[] = [];
           for (let j = 0; j < pageSize[0]; j++) {
-            values.push(this.renderValue(data[i + j]));
+            values.push(
+              this.renderValue(i + j < data.length ? data[i + j] : null),
+            );
           }
           pagedRows.push({
             values,
-            offset: i.toString(16).padStart(8, '0').toUpperCase(),
+            offset: i.toString(16).padStart(8, "0").toUpperCase(),
           });
         }
         this.renderedRows$.next(pagedRows);
@@ -301,7 +392,7 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
   changePage(direction: number): void {
     let newPage = Math.min(
       Math.max(this.currentPage$.value + direction, 0),
-      this.totalPages$.value - 1
+      this.totalPages$.value - 1,
     );
     if (this.currentPage$.value !== newPage) {
       this.currentPage$.next(newPage);
@@ -319,7 +410,9 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
   }
 
   blurInput(rowIndex: number, colIndex: number): boolean {
-    const em = this.editorBody.nativeElement.querySelector(`#hex_input__${rowIndex}__${colIndex}`);
+    const em = this.editorBody.nativeElement.querySelector(
+      `#hex_input__${rowIndex}__${colIndex}`,
+    );
     if (em) {
       (em as HTMLInputElement).focus();
       return true;
@@ -328,7 +421,7 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
   }
 
   private goToNextInput(currentInputId: string) {
-    const [_, rowIndex, colIndex] = currentInputId.split('__');
+    const [_, rowIndex, colIndex] = currentInputId.split("__");
     if (this.blurInput(+rowIndex, +colIndex + 1)) {
       return;
     }
@@ -344,7 +437,8 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
   onHexInput(event: Event, rowIndex: number, colIndex: number): void {
     const inputElement = event.target as HTMLInputElement;
     if (this.readOnly) {
-      inputElement.value = this.renderedRows$.value[rowIndex].values[colIndex][0]!;
+      inputElement.value =
+        this.renderedRows$.value[rowIndex].values[colIndex].hex!;
       return;
     }
     const value = inputElement.value.replace(/[^0-9a-fA-F]/g, "");
@@ -352,24 +446,35 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
     if (value.length === 2) {
       const byteValue = parseInt(value, 16);
       if (!isNaN(byteValue) && byteValue >= 0 && byteValue <= 255) {
-        const dataIndex = (this.currentPage$.value * this.pageSize$.value[1] + rowIndex) * this.pageSize$.value[0] + colIndex;
-        this.data[dataIndex] = byteValue;
-        this.renderedRows$.value[rowIndex].values[colIndex] = this.renderValue(byteValue);
-        this.cdr.detectChanges();
+        const dataIndex =
+          (this.currentPage$.value * this.pageSize$.value[1] + rowIndex) *
+            this.pageSize$.value[0] +
+          colIndex;
+        if (dataIndex >= this.data.length) {
+          const newData = new Uint8Array(dataIndex + 1);
+          newData.set(this.data);
+          newData[dataIndex] = byteValue;
+          this._data$.next(newData);
+        } else {
+          this.data[dataIndex] = byteValue;
+          this.renderedRows$.value[rowIndex].values[colIndex] =
+            this.renderValue(byteValue);
+          this.cdr.detectChanges();
+        }
 
         this.dataChange.emit(this.data);
-        this.goToNextInput(inputElement.id);
+        setTimeout(() => this.goToNextInput(inputElement.id), 0);
       }
     }
   }
 
   onHexFocus(event: Event, colIndex: number): void {
     const inputElement = event.target as HTMLInputElement;
-    const editorRow = inputElement.closest('.row');
+    const editorRow = inputElement.closest(".row");
     if (editorRow) {
-      const utf8Spans = editorRow.querySelectorAll('.utf8-values span');
+      const utf8Spans = editorRow.querySelectorAll(".utf8-values span");
       utf8Spans.forEach((span, index) => {
-        span.classList.toggle('highlight', index === colIndex);
+        span.classList.toggle("highlight", index === colIndex);
       });
     }
     inputElement.select();
@@ -377,11 +482,11 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
 
   onHexBlur(event: Event): void {
     const inputElement = event.target as HTMLInputElement;
-    const editorRow = inputElement.closest('.row');
+    const editorRow = inputElement.closest(".row");
     if (editorRow) {
-      const utf8Spans = editorRow.querySelectorAll('.utf8-values span');
+      const utf8Spans = editorRow.querySelectorAll(".utf8-values span");
       utf8Spans.forEach((span) => {
-        span.classList.remove('highlight');
+        span.classList.remove("highlight");
       });
     }
   }
