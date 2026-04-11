@@ -16,6 +16,7 @@ binary data efficiently, with features such as editable hex values and UTF8 visu
 
 - **Hex and UTF8 Views**: Displays data in both hexadecimal and UTF8 formats.
 - **Editable Data**: Supports modifying individual bytes interactively in place.
+- **Insert/Delete**: Press `Insert` to insert a new byte before the selected one, or `Backspace`/`Delete` to remove byte.
 - **Pagination**: Allows to efficiently edit big byte arrays.
 - **Responsive**: Works well across various screen sizes.
 
@@ -93,6 +94,20 @@ export class AppComponent {
 | `maxColumns`  | `number`     | `0`                | Max amount of columns in the viewport. 0 means unlimited. |
 | `showOffsets` | `boolean`    | `true`             | Show global offset for each line (left panel).            |
 | `showUtf8`    | `boolean`    | `true`             | Show UTF8 representation for each byte (right panel).     |
+
+---
+
+## Keyboard Shortcuts
+
+| Shortcut             | Description                                       |
+|----------------------|---------------------------------------------------|
+| `0-9`, `a-f` / `A-F` | Edit the selected byte.                           |
+| `Insert`             | Insert a new byte (0x00) before the selected one. |
+| `Backspace`          | Remove the previous byte.                         |
+| `Delete`             | Remove the selected byte.                         |
+| `Tab` / `Shift+Tab`  | Navigate between bytes.                           |
+
+---
 
 | Output       | Type                       | Description                                                                                                                                                                                  |
 | ------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
