@@ -144,6 +144,7 @@ import {
 
       .utf8-values {
         margin-left: 8px;
+        overflow-x: clip;
       }
 
       .utf8-values span {
