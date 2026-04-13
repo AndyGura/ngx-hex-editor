@@ -184,7 +184,7 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
     this._maxColumns$.next(value);
   }
 
-  _maxRows$: BehaviorSubject<number> = new BehaviorSubject<number>(0);
+  _maxRows$: BehaviorSubject<number> = new BehaviorSubject<number>(16);
 
   @Input() set maxRows(value: number) {
     this._maxRows$.next(value);
@@ -314,7 +314,7 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
           }
           cols = Math.max(1, cols);
           let rows = Math.floor(height / rowHeight);
-          if (maxRows > 0 && rows > maxRows) {
+          if (maxRows > 0) {
             rows = maxRows;
           }
           rows = Math.max(1, rows);
