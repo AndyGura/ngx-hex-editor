@@ -14,7 +14,7 @@
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "paths": {
-      "ngx-hex-editor": ["dist/ngx-hex-editor"]
+      "ngx-hex-editor": ["projects/ngx-hex-editor/src/public-api.ts", "dist/ngx-hex-editor"]
     },
     "declaration": false,
     "experimentalDecorators": true,
