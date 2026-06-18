@@ -109,9 +109,10 @@ export class AppComponent {
 
 ---
 
-| Output       | Type                       | Description                                                                                                                                                                                  |
-| ------------ | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `dataChange` | `EventEmitter<Uint8Array>` | Emits updated data when changes occur. Note: if changes occur in already existing bytes, data is edited in place. If new bytes are appended, then a new `Uint8Array` is created and emitted. |
+| Output            | Type                                 | Description                                                                                                                                                                                  |
+| ----------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dataChange`      | `EventEmitter<Uint8Array>`           | Emits updated data when changes occur. Note: if changes occur in already existing bytes, data is edited in place. If new bytes are appended, then a new `Uint8Array` is created and emitted. |
+| `dataDeltaChange` | `EventEmitter<HexEditorDeltaChange>` | Emits detailed delta changes (insert, update, delete). Allows master code to detect changes without reading the whole bytearray.                                                             |
 
 ---
 

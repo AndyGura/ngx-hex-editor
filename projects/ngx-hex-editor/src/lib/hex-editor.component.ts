@@ -18,6 +18,15 @@ import {
   takeUntil,
 } from "rxjs";
 
+export type HexEditorDeltaChangeType = "insert" | "delete" | "update";
+
+export interface HexEditorDeltaChange {
+  type: HexEditorDeltaChangeType;
+  index: number;
+  data?: Uint8Array;
+  count?: number;
+}
+
 @Component({
   selector: "hex-editor",
   template: `
@@ -234,6 +243,7 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
   }
 
   @Output() dataChange = new EventEmitter<Uint8Array>();
+  @Output() dataDeltaChange = new EventEmitter<HexEditorDeltaChange>();
 
   @ViewChild("editorBody") editorBody!: ElementRef<HTMLDivElement>;
 
@@ -456,11 +466,21 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
           newData.set(this.data);
           newData[dataIndex] = byteValue;
           this._data$.next(newData);
+          this.dataDeltaChange.emit({
+            type: "insert",
+            index: dataIndex,
+            data: new Uint8Array([byteValue]),
+          });
         } else {
           this.data[dataIndex] = byteValue;
           this.renderedRows$.value[rowIndex].values[colIndex] =
             this.renderValue(byteValue);
           this.cdr.detectChanges();
+          this.dataDeltaChange.emit({
+            type: "update",
+            index: dataIndex,
+            data: new Uint8Array([byteValue]),
+          });
         }
 
         this.dataChange.emit(this.data);
@@ -485,6 +505,11 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
         newData.set(this.data.subarray(0, dataIndex));
         newData.set(this.data.subarray(dataIndex + 1), dataIndex);
         this._data$.next(newData);
+        this.dataDeltaChange.emit({
+          type: "delete",
+          index: dataIndex,
+          count: 1,
+        });
         this.dataChange.emit(this.data);
         event.preventDefault();
       }
@@ -500,6 +525,11 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
         newData[dataIndex] = 0;
         newData.set(this.data.subarray(dataIndex), dataIndex + 1);
         this._data$.next(newData);
+        this.dataDeltaChange.emit({
+          type: "insert",
+          index: dataIndex,
+          data: new Uint8Array([0]),
+        });
         this.dataChange.emit(this.data);
         event.preventDefault();
       }
@@ -519,6 +549,11 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
           newData.set(this.data.subarray(0, dataIndex - 1));
           newData.set(this.data.subarray(dataIndex), dataIndex - 1);
           this._data$.next(newData);
+          this.dataDeltaChange.emit({
+            type: "delete",
+            index: dataIndex - 1,
+            count: 1,
+          });
           this.dataChange.emit(this.data);
 
           // Move focus back
@@ -538,6 +573,11 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
           event.preventDefault();
         } else if (dataIndex === 0 && this.data.length === 1) {
           this._data$.next(new Uint8Array());
+          this.dataDeltaChange.emit({
+            type: "delete",
+            index: 0,
+            count: 1,
+          });
           this.dataChange.emit(this.data);
           event.preventDefault();
         } else if (dataIndex === 0 && this.data.length > 1) {
