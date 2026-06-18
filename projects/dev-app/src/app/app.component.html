@@ -14,7 +14,24 @@
     <hex-editor
       [data]="binaryData"
       (dataChange)="onDataChange($event)"
+      (dataDeltaChange)="onDataDeltaChange($event)"
       style="height: 400px; border: 1px solid #ccc"
     ></hex-editor>
+  </div>
+
+  <div class="events-section">
+    <div class="events-header">
+      <h3>Delta Events Log (latest 10)</h3>
+      <button (click)="clearEvents()">Clear</button>
+    </div>
+    <div class="events-log">
+      @for (event of deltaEvents; track $index) {
+        <div class="event-item">{{ event }}</div>
+      } @empty {
+        <div class="no-events">
+          No events yet. Edit the hex data to see changes.
+        </div>
+      }
+    </div>
   </div>
 </div>

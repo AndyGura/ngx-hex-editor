@@ -14,3 +14,42 @@
 .editor-section {
   margin-top: 20px;
 }
+
+.events-section {
+  margin-top: 20px;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
+  padding: 10px;
+}
+
+.events-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.events-header h3 {
+  margin: 0;
+}
+
+.events-log {
+  font-family: monospace;
+  font-size: 14px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.event-item {
+  padding: 4px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.event-item:last-child {
+  border-bottom: none;
+}
+
+.no-events {
+  color: #777;
+  font-style: italic;
+}

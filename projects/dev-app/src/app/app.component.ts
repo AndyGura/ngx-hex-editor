@@ -1,15 +1,22 @@
-import {ChangeDetectionStrategy, ChangeDetectorRef, Component} from "@angular/core";
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+} from "@angular/core";
+import { HexEditorDeltaChange } from "../../../../projects/ngx-hex-editor/src/public-api";
 
 @Component({
   selector: "app-root",
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.css"],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false,
 })
 export class AppComponent {
   title = "dev-app";
   hexString = "48656c6c6f20576f726c6421"; // "Hello World!" in hex
   binaryData: Uint8Array = new Uint8Array();
+  deltaEvents: string[] = [];
 
   constructor(private readonly cdr: ChangeDetectorRef) {
     this.updateBinaryFromHex();
@@ -38,10 +45,35 @@ export class AppComponent {
   }
 
   updateHexFromBinary() {
-    this.hexString = Array.from(this.binaryData)
-      .map((b) => b.toString(16).padStart(2, "0"))
+    this.hexString = Array.from(this.binaryData as Uint8Array)
+      .map((b: number) => b.toString(16).padStart(2, "0"))
       .join("")
       .toUpperCase();
+    this.cdr.markForCheck();
+  }
+
+  onDataDeltaChange(event: HexEditorDeltaChange) {
+    const timestamp = new Date().toLocaleTimeString();
+    let message = `[${timestamp}] ${event.type.toUpperCase()} at index ${event.index}`;
+    if (event.data) {
+      const hex = Array.from(event.data as Uint8Array)
+        .map((b: number) => b.toString(16).padStart(2, "0").toUpperCase())
+        .join(" ");
+      message += `, data: [${hex}]`;
+    }
+    if (event.count !== undefined) {
+      message += `, count: ${event.count}`;
+    }
+
+    this.deltaEvents.unshift(message);
+    if (this.deltaEvents.length > 10) {
+      this.deltaEvents.pop();
+    }
+    this.cdr.markForCheck();
+  }
+
+  clearEvents() {
+    this.deltaEvents = [];
     this.cdr.markForCheck();
   }
 }
