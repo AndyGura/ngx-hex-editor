@@ -3,7 +3,7 @@ import {
   ChangeDetectorRef,
   Component,
 } from "@angular/core";
-import { HexEditorDeltaChange } from 'ngx-hex-editor';
+import { HexEditorDeltaChange } from "ngx-hex-editor";
 
 @Component({
   selector: "app-root",

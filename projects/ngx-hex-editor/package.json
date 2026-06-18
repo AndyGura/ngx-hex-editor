@@ -1,6 +1,6 @@
 {
   "name": "ngx-hex-editor",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/AndyGura/ngx-hex-editor.git"
@@ -23,11 +23,5 @@
     "tslib": "^2.3.0"
   },
   "sideEffects": false,
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./src/public-api.ts",
-      "default": "./src/public-api.ts"
-    }
-  }
+  "type": "module"
 }

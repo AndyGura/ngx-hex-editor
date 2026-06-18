@@ -40,6 +40,27 @@ yarn add ngx-hex-editor
 
 ## Usage
 
+### Standalone Component (Recommended for Angular 14+)
+
+Import the component directly in your standalone component:
+
+```typescript
+import { Component } from "@angular/core";
+import { HexEditorComponent } from "ngx-hex-editor";
+
+@Component({
+  selector: "app-my-editor",
+  standalone: true,
+  imports: [HexEditorComponent],
+  template: `<hex-editor [data]="data"></hex-editor>`,
+})
+export class MyEditorComponent {
+  data = new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f]);
+}
+```
+
+### Module-based (Legacy)
+
 1. Import the module in your Angular application:
 
 ```typescript

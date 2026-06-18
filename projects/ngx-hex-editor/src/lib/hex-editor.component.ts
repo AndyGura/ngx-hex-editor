@@ -10,6 +10,7 @@ import {
   Output,
   ViewChild,
 } from "@angular/core";
+import { AsyncPipe } from "@angular/common";
 import {
   auditTime,
   BehaviorSubject,
@@ -190,7 +191,8 @@ export interface HexEditorDeltaChange {
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  standalone: false,
+  imports: [AsyncPipe],
+  standalone: true,
 })
 export class HexEditorComponent implements AfterViewInit, OnDestroy {
   _maxColumns$: BehaviorSubject<number> = new BehaviorSubject<number>(0);

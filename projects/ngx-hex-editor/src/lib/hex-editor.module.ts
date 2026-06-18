@@ -1,10 +1,8 @@
 import { NgModule } from "@angular/core";
 import { HexEditorComponent } from "./hex-editor.component";
-import { CommonModule } from "@angular/common";
 
 @NgModule({
-  declarations: [HexEditorComponent],
-  imports: [CommonModule],
+  imports: [HexEditorComponent],
   exports: [HexEditorComponent],
 })
 export class HexEditorModule {}
