@@ -22,74 +22,79 @@ import {
   selector: "hex-editor",
   template: `
     <div class="editor-body" #editorBody>
-      <div
-        class="row"
-        *ngFor="
-          let row of renderedRows$ | async;
-          let rowIndex = index;
-          trackBy: trackByIndex
-        "
-        [class.gray]="rowIndex % 2 !== 0"
-      >
-        <div *ngIf="_showOffsets$ | async" class="offset">{{ row.offset }}</div>
-        <div class="hex-values">
-          <input
-            *ngFor="
-              let value of row.values;
-              let colIndex = index;
-              trackBy: trackByIndex
-            "
-            [id]="'hex_input__' + rowIndex + '__' + colIndex"
-            [value]="value.hex"
-            (input)="onHexInput($event, rowIndex, colIndex)"
-            (keydown)="onKeyDown($event, rowIndex, colIndex)"
-            (focus)="onHexFocus($event, colIndex)"
-            (blur)="onHexBlur($event)"
-            [disabled]="readOnly"
-            [class.empty]="value.isEmpty"
-            maxlength="2"
-          />
+      @for (
+        row of renderedRows$ | async;
+        track trackByIndex(rowIndex);
+        let rowIndex = $index
+      ) {
+        <div class="row" [class.gray]="rowIndex % 2 !== 0">
+          @if (_showOffsets$ | async) {
+            <div class="offset">{{ row.offset }}</div>
+          }
+          <div class="hex-values">
+            @for (
+              value of row.values;
+              track trackByIndex(colIndex);
+              let colIndex = $index
+            ) {
+              <input
+                [id]="'hex_input__' + rowIndex + '__' + colIndex"
+                [value]="value.hex"
+                (input)="onHexInput($event, rowIndex, colIndex)"
+                (keydown)="onKeyDown($event, rowIndex, colIndex)"
+                (focus)="onHexFocus($event, colIndex)"
+                (blur)="onHexBlur($event)"
+                [disabled]="readOnly"
+                [class.empty]="value.isEmpty"
+                maxlength="2"
+              />
+            }
+          </div>
+          @if ((_showOffsets$ | async) || (_showUtf8$ | async)) {
+            <div class="flex-spacer"></div>
+          }
+          @if (_showUtf8$ | async) {
+            <div class="utf8-values">
+              @for (
+                value of row.values;
+                track trackByIndex(colIndex);
+                let colIndex = $index
+              ) {
+                <span
+                  [id]="'utf_char__' + rowIndex + '__' + colIndex"
+                  [class.empty]="value.isEmpty"
+                  (click)="blurInput(rowIndex, colIndex)"
+                  >{{ value.utf8 }}</span
+                >
+              }
+            </div>
+          }
         </div>
-        <div
-          *ngIf="(_showOffsets$ | async) || (_showUtf8$ | async)"
-          class="flex-spacer"
-        ></div>
-        <div *ngIf="_showUtf8$ | async" class="utf8-values">
-          <span
-            *ngFor="
-              let value of row.values;
-              let colIndex = index;
-              trackBy: trackByIndex
-            "
-            [id]="'utf_char__' + rowIndex + '__' + colIndex"
-            [class.empty]="value.isEmpty"
-            (click)="blurInput(rowIndex, colIndex)"
-            >{{ value.utf8 }}</span
-          >
-        </div>
-      </div>
+      }
       <div class="flex-spacer"></div>
     </div>
-    <div *ngIf="((totalPages$ | async) || 0) > 1" class="pagination">
-      <button
-        (click)="changePage(-1)"
-        [disabled]="(currentPage$ | async) === 0"
-      >
-        Previous
-      </button>
-      <span
-        >Page {{ ((currentPage$ | async) || 0) + 1 }} of
-        {{ totalPages$ | async }}</span
-      >
-      <button
-        (click)="changePage(1)"
-        [disabled]="
-          ((currentPage$ | async) || 0) >= ((totalPages$ | async) || 0) - 1
-        "
-      >
-        Next
-      </button>
-    </div>
+    @if (((totalPages$ | async) || 0) > 1) {
+      <div class="pagination">
+        <button
+          (click)="changePage(-1)"
+          [disabled]="(currentPage$ | async) === 0"
+        >
+          Previous
+        </button>
+        <span
+          >Page {{ ((currentPage$ | async) || 0) + 1 }} of
+          {{ totalPages$ | async }}</span
+        >
+        <button
+          (click)="changePage(1)"
+          [disabled]="
+            ((currentPage$ | async) || 0) >= ((totalPages$ | async) || 0) - 1
+          "
+        >
+          Next
+        </button>
+      </div>
+    }
   `,
   styles: [
     `
@@ -176,6 +181,7 @@ import {
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: false,
 })
 export class HexEditorComponent implements AfterViewInit, OnDestroy {
   _maxColumns$: BehaviorSubject<number> = new BehaviorSubject<number>(0);
@@ -529,6 +535,13 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
               );
             }
           }, 0);
+          event.preventDefault();
+        } else if (dataIndex === 0 && this.data.length === 1) {
+          this._data$.next(new Uint8Array());
+          this.dataChange.emit(this.data);
+          event.preventDefault();
+        } else if (dataIndex === 0 && this.data.length > 1) {
+          inputElement.blur();
           event.preventDefault();
         }
       }

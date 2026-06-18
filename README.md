@@ -100,7 +100,7 @@ export class AppComponent {
 ## Keyboard Shortcuts
 
 | Shortcut             | Description                                       |
-|----------------------|---------------------------------------------------|
+| -------------------- | ------------------------------------------------- |
 | `0-9`, `a-f` / `A-F` | Edit the selected byte.                           |
 | `Insert`             | Insert a new byte (0x00) before the selected one. |
 | `Backspace`          | Remove the previous byte.                         |
