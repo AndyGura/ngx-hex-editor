@@ -28,7 +28,9 @@
           "builder": "@angular/build:karma",
           "options": {
             "tsConfig": "projects/ngx-hex-editor/tsconfig.spec.json",
-            "polyfills": ["zone.js", "zone.js/testing"]
+            "polyfills": ["zone.js", "zone.js/testing"],
+            "browsers": "ChromeHeadless",
+            "watch": false
           }
         }
       }
@@ -132,7 +134,9 @@
               "projects/dev-app/src/assets"
             ],
             "styles": ["projects/dev-app/src/styles.css"],
-            "scripts": []
+            "scripts": [],
+            "browsers": "ChromeHeadless",
+            "watch": false
           }
         }
       }

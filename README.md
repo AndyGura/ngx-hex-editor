@@ -148,10 +148,22 @@ To run the development subproject for testing and exploring the library:
    ```
 
 2. Run the development server:
+
    ```bash
    npm run dev
    ```
+
    The development application will be available at `http://localhost:4200/`. It provides a textarea for Base16 encoded data synced with the hex editor component.
+
+3. Run unit tests:
+   ```bash
+   npm test
+   ```
+   By default, tests run in headless mode and exit after a single run.
+   To run tests in watch mode:
+   ```bash
+   npm test -- --watch
+   ```
 
 ---
 

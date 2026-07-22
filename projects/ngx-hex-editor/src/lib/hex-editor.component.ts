@@ -86,16 +86,25 @@ export interface HexEditorDeltaChange {
     @if (((totalPages$ | async) || 0) > 1) {
       <div class="pagination">
         <button
+          type="button"
           (click)="changePage(-1)"
           [disabled]="(currentPage$ | async) === 0"
         >
           Previous
         </button>
         <span
-          >Page {{ ((currentPage$ | async) || 0) + 1 }} of
-          {{ totalPages$ | async }}</span
+          >Page
+          <span
+            contenteditable="true"
+            class="page-input"
+            (blur)="onPageInput($event)"
+            (keydown.enter)="onPageEnter($any($event))"
+            [innerText]="((currentPage$ | async) || 0) + 1"
+          ></span>
+          of {{ totalPages$ | async }}</span
         >
         <button
+          type="button"
           (click)="changePage(1)"
           [disabled]="
             ((currentPage$ | async) || 0) >= ((totalPages$ | async) || 0) - 1
@@ -183,6 +192,19 @@ export interface HexEditorDeltaChange {
         justify-content: space-between;
         align-items: center;
         margin-top: 1em;
+      }
+
+      .page-input {
+        display: inline-block;
+        min-width: 20px;
+        text-align: center;
+        margin: 0 4px;
+        padding: 0 4px;
+        outline: none;
+      }
+
+      .page-input:focus {
+        background-color: #eee;
       }
 
       .flex-spacer {
@@ -403,14 +425,32 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
   }
 
   changePage(direction: number): void {
-    let newPage = Math.min(
-      Math.max(this.currentPage$.value + direction, 0),
-      this.totalPages$.value - 1,
-    );
+    this.goToPage(this.currentPage$.value + direction);
+  }
+
+  goToPage(page: number): void {
+    const totalPages = this.totalPages$.value;
+    const newPage = Math.max(0, Math.min(totalPages - 1, page));
     if (this.currentPage$.value !== newPage) {
       this.currentPage$.next(newPage);
       this.cdr.detectChanges();
+    } else {
+      this.cdr.detectChanges();
     }
+  }
+
+  onPageInput(event: Event): void {
+    const element = event.target as HTMLElement;
+    const page = parseInt(element.innerText, 10) - 1;
+    if (!isNaN(page)) {
+      this.goToPage(page);
+    }
+    element.innerText = (this.currentPage$.value + 1).toString();
+  }
+
+  onPageEnter(event: KeyboardEvent): void {
+    event.preventDefault();
+    (event.target as HTMLElement).blur();
   }
 
   ngOnDestroy() {
