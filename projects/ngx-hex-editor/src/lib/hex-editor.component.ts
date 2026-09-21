@@ -143,7 +143,9 @@ export interface HexEditorDeltaChange {
       }
 
       .offset {
-        width: 60px;
+        width: 8ch;
+        flex-shrink: 0;
+        white-space: nowrap;
         text-align: left;
         margin-right: 8px;
       }
@@ -294,7 +296,23 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
 
   private readonly destroyed$: Subject<void> = new Subject<void>();
 
+  private measureCanvasContext?: CanvasRenderingContext2D;
+
   constructor(private readonly cdr: ChangeDetectorRef) {}
+
+  // Measures the pixel width of a single monospace character ("0", i.e. 1ch)
+  // in the editor's actual resolved font, since that width isn't consistent
+  // across platforms/fonts (e.g. macOS vs Linux default monospace).
+  private getCharWidth(): number {
+    if (!this.measureCanvasContext) {
+      this.measureCanvasContext = document
+        .createElement("canvas")
+        .getContext("2d")!;
+    }
+    const style = getComputedStyle(this.editorBody.nativeElement);
+    this.measureCanvasContext.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    return this.measureCanvasContext.measureText("0").width;
+  }
 
   private renderValue(byte: number | null): {
     hex: string | null;
@@ -336,7 +354,10 @@ export class HexEditorComponent implements AfterViewInit, OnDestroy {
         ([[pureWidth, height], maxColumns, maxRows, showOffsets, showUtf8]) => {
           let width = pureWidth - 8; // - utf8 panel margin
           if (showOffsets) {
-            width -= 68; // -60px width -8 px margin
+            // offset column is sized in `ch` (8 hex digits), whose pixel
+            // width depends on the resolved monospace font, so measure it
+            // instead of assuming a fixed pixel value
+            width -= this.getCharWidth() * 8 + 8; // 8 hex digits + 8px margin
           }
           let byteWidth = 32 + 2; // 32 own size, 2 gap
           if (showUtf8) {
